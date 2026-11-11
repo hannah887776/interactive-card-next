@@ -20,6 +20,16 @@
 # production
 /build
 
+# Ignore generated files in the nested project folder
+/interactive-card-next/node_modules/
+/interactive-card-next/.next/
+/interactive-card-next/out/
+/interactive-card-next/build/
+/interactive-card-next/.env*
+/interactive-card-next/*.tsbuildinfo
+/interactive-card-next/next-env.d.ts
+
+
 # misc
 .DS_Store
 *.pem
