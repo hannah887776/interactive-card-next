@@ -1,5 +1,6 @@
-"use client";
 
+"use client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +11,11 @@ import {
   emptyCardFormValues,
   type CardFormValues,
 } from "../validation";
+import { saveCard, type SavedCard } from "../lib/cardStorage";
+
 
 export default function Home() {
+  const router = useRouter();
   const form = useForm<CardFormValues>({
     resolver: zodResolver(cardFormSchema),
     defaultValues: emptyCardFormValues,
@@ -20,15 +24,30 @@ export default function Home() {
   });
 
   const [isComplete, setIsComplete] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  function handleValidSubmit() {
-    setIsComplete(true);
+  function handleValidSubmit(values: CardFormValues) {
+    const newCard: SavedCard = {
+      id: crypto.randomUUID(),
+      cardholder: values.cardholder,
+      lastFourDigits: values.cardNumber.slice(-4),
+      expiryMonth: values.expiryMonth,
+      expiryYear: values.expiryYear,
+    };
+
+    try {
+      saveCard(newCard);
+      setSaveError("");
+      setIsComplete(true);
+    } catch (error) {
+      console.error("Failed to save card:", error);
+      setSaveError("Could not save your card. Please try again.");
+    }
   }
 
-  function handleContinue() {
-    form.reset();
-    setIsComplete(false);
-  }
+ function handleContinue() {
+  router.push("/cards");
+}
 
   return (
     <FormProvider {...form}>
@@ -82,11 +101,18 @@ export default function Home() {
                   onClick={handleContinue}
                   className="h-[53px] w-full cursor-pointer rounded-lg bg-ink text-lg text-white transition-opacity hover:opacity-90"
                 >
-                  Continue
+                  View My Cards
                 </button>
               </div>
             ) : (
-              <CardForm onValidSubmit={handleValidSubmit} />
+              <>
+                {saveError && (
+                  <p role="alert" className="mb-4 text-sm text-red-600">
+                    {saveError}
+                  </p>
+                )}
+                <CardForm onValidSubmit={handleValidSubmit} />
+              </>
             )}
           </div>
         </section>
